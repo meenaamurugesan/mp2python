@@ -8,10 +8,10 @@ def test_postgress_connection(connection_string):
 
         cur = conn.cursor()
 
-        cur.execute("SELECT version();")
-        db_version = cur.fetchone()
-        print("Connetion successful!")
-        print(f"PostgresSQL version: {db_version}")
+        cur.execute("SELECT * from customer;")
+        customers = cur.fetchall()
+        print("Connection successful!")
+        print(f"Customers: {customers}")
 
         cur.close()
         conn.close()

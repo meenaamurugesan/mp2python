@@ -197,11 +197,9 @@ def main():
     Try asking questions like:
                         
     **Sample Queries:**
-    - Show total sales revenue per region
-    - List customers who ordered more than 10 items
-    - Top 5 best selling products
-    - Show monthly revenue for 2023
-    - Which country has the most customers?
+    - Which product category generates the most revenue?
+    - Show customer counts per region.
+    - Which customer spent the most money overall?
     """)
     st.sidebar.markdown("---")
     st.sidebar.info("""
