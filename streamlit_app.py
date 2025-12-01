@@ -16,57 +16,55 @@ HASHED_PASSWORD = st.secrets["HASHED_PASSWORD"].encode("utf-8")
 
 # Database schema for context
 DATABASE_SCHEMA = """
-Database Schema:
+Database Schema (Sales / Orders):
 
-LOOKUP TABLES:
-- genders (gender_id SERIAL PRIMARY KEY, gender_desc TEXT)
-- races (race_id SERIAL PRIMARY KEY, race_desc TEXT)
-- marital_statuses (marital_status_id SERIAL PRIMARY KEY, marital_status_desc TEXT)
-- languages (language_id SERIAL PRIMARY KEY, language_desc TEXT)
-- lab_units (unit_id SERIAL PRIMARY KEY, unit_string TEXT)
-- lab_tests (lab_test_id SERIAL PRIMARY KEY, lab_name TEXT, unit_id INTEGER)
-- diagnosis_codes (diagnosis_code TEXT PRIMARY KEY, diagnosis_description TEXT)
+TABLE: region
+- regionid INTEGER PRIMARY KEY
+- region   TEXT NOT NULL
 
-CORE TABLES:
-- patients (
-    patient_id TEXT PRIMARY KEY,
-    patient_gender INTEGER (FK to genders),
-    patient_dob TIMESTAMP,
-    patient_race INTEGER (FK to races),
-    patient_marital_status INTEGER (FK to marital_statuses),
-    patient_language INTEGER (FK to languages),
-    patient_population_pct_below_poverty REAL
-  )
+TABLE: country
+- countryid INTEGER PRIMARY KEY
+- country   TEXT NOT NULL
+- regionid  INTEGER NOT NULL REFERENCES region(regionid)
 
-- admissions (
-    patient_id TEXT,
-    admission_id INTEGER,
-    admission_start TIMESTAMP,
-    admission_end TIMESTAMP,
-    PRIMARY KEY (patient_id, admission_id)
-  )
+TABLE: customer
+- customerid INTEGER PRIMARY KEY
+- firstname  TEXT NOT NULL
+- lastname   TEXT NOT NULL
+- address    TEXT NOT NULL
+- city       TEXT NOT NULL
+- countryid  INTEGER NOT NULL REFERENCES country(countryid)
 
-- admission_primary_diagnoses (
-    patient_id TEXT,
-    admission_id INTEGER,
-    diagnosis_code TEXT (FK to diagnosis_codes),
-    PRIMARY KEY (patient_id, admission_id)
-  )
+TABLE: productcategory
+- productcategoryid          INTEGER PRIMARY KEY
+- productcategory            TEXT NOT NULL
+- productcategorydescription TEXT NOT NULL
 
-- admission_lab_results (
-    patient_id TEXT,
-    admission_id INTEGER,
-    lab_test_id INTEGER (FK to lab_tests),
-    lab_value REAL,
-    lab_datetime TIMESTAMP
-  )
+TABLE: product
+- productid         INTEGER PRIMARY KEY
+- productname       TEXT NOT NULL
+- productunitprice  REAL NOT NULL
+- productcategoryid INTEGER NOT NULL REFERENCES productcategory(productcategoryid)
 
-IMPORTANT NOTES:
-- Use JOINs to get descriptive values from lookup tables
-- patient_dob, admission_start, admission_end, and lab_datetime are TIMESTAMP types
-- To calculate age: EXTRACT(YEAR FROM AGE(patient_dob))
-- To calculate length of stay: EXTRACT(EPOCH FROM (admission_end - admission_start)) / 86400 (gives days)
-- Always use proper JOINs for foreign key relationships
+TABLE: orderdetail
+- orderid         INTEGER PRIMARY KEY
+- customerid      INTEGER NOT NULL REFERENCES customer(customerid)
+- productid       INTEGER NOT NULL REFERENCES product(productid)
+- orderdate       TIMESTAMP NOT NULL
+- quantityordered INTEGER NOT NULL
+
+RELATIONSHIPS / NOTES:
+- Each country belongs to exactly one region (country.regionid → region.regionid)
+- Each customer lives in a country (customer.countryid → country.countryid)
+- Each product belongs to a product category (product.productcategoryid → productcategory.productcategoryid)
+- Each orderdetail row represents one product in one order by one customer
+  (orderdetail.customerid → customer.customerid,
+   orderdetail.productid → product.productid)
+- orderdate is a TIMESTAMP and can be used for year/quarter/month/day analysis
+- You can compute revenue as: product.productunitprice * orderdetail.quantityordered
+
+EXAMPLE QUERY IDEAS:
+
 """
 
 
@@ -209,11 +207,12 @@ def main():
     st.sidebar.markdown("""
     Try asking questions like:
                         
-    **Demographics:**
-    - How many patients do we have by gender?
-                        
-    **Admissions:**
-    - What is the average length of stay?                      
+    **Sample Queries:**
+    - Total sales by customer (customer name + total)
+    - Total sales by country or by region
+    - Top N products by revenue
+    - Sales by year / quarter / month
+    - Customers in a given country with their total spend                      
     """)
     st.sidebar.markdown("---")
     st.sidebar.info("""
@@ -244,7 +243,7 @@ def main():
     user_question = st.text_area(
         " What would you like to know?",
         height=100, 
-        placeholder="What is the average length of stay?    "
+        placeholder="Customers in a given country with their total spend     "
     )
 
     col1, col2, col3 = st.columns([1, 1, 4])
