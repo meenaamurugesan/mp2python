@@ -53,17 +53,6 @@ TABLE: orderdetail
 - orderdate       TIMESTAMP NOT NULL
 - quantityordered INTEGER NOT NULL
 
-RELATIONSHIPS / NOTES:
-- Each country belongs to exactly one region (country.regionid → region.regionid)
-- Each customer lives in a country (customer.countryid → country.countryid)
-- Each product belongs to a product category (product.productcategoryid → productcategory.productcategoryid)
-- Each orderdetail row represents one product in one order by one customer
-  (orderdetail.customerid → customer.customerid,
-   orderdetail.productid → product.productid)
-- orderdate is a TIMESTAMP and can be used for year/quarter/month/day analysis
-- You can compute revenue as: product.productunitprice * orderdetail.quantityordered
-
-EXAMPLE QUERY IDEAS:
 
 """
 
@@ -208,11 +197,11 @@ def main():
     Try asking questions like:
                         
     **Sample Queries:**
-    - Total sales by customer (customer name + total)
-    - Total sales by country or by region
-    - Top N products by revenue
-    - Sales by year / quarter / month
-    - Customers in a given country with their total spend                      
+    - Show total sales revenue per region
+    - List customers who ordered more than 10 items
+    - Top 5 best selling products
+    - Show monthly revenue for 2023
+    - Which country has the most customers?
     """)
     st.sidebar.markdown("---")
     st.sidebar.info("""
@@ -243,7 +232,7 @@ def main():
     user_question = st.text_area(
         " What would you like to know?",
         height=100, 
-        placeholder="Customers in a given country with their total spend     "
+        placeholder="Show total sales revenue per region"
     )
 
     col1, col2, col3 = st.columns([1, 1, 4])
